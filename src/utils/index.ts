@@ -84,7 +84,8 @@ export function getReferencedTypeModules(_referencedTypes: unknown, _writtenAt: 
         referencedTypeModules[outputFile.modulePath] = {
           modulePath: outputFile.modulePath,
           moduleRelativePath: generateRelativePath(writtenAt, outputFile.modulePath),
-          referencedTypes: [referenceType]
+          referencedTypes: [referenceType],
+          moduleName: outputFile.modulePath.split('/').pop() ?? ''
         };
       } else {
         referencedTypeModules[outputFile.modulePath].referencedTypes.push(referenceType);
@@ -160,6 +161,7 @@ export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('jsonKey', refineJSONKey);
   Handlebars.registerHelper('variableName', refineVariableName);
   Handlebars.registerHelper('indexKey', refineIndexKey);
+  Handlebars.registerHelper('stringify', (value: unknown) => JSON.stringify(value));
   Handlebars.registerHelper('not', (value: unknown) => {
     if (typeof value === 'boolean') {
       return !value;

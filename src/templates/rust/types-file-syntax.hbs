@@ -1,0 +1,5 @@
+{{#each (getReferencedTypeModules referencedTypes writtenAt)}}
+use crate::generated::types::{ {{{this.referencedTypes}}} };
+{{/each}}
+
+{{{typesContent}}}

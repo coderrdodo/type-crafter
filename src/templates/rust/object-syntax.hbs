@@ -1,0 +1,5 @@
+pub struct {{typeName}} {
+   {{#each properties}}
+    pub {{@key}}: {{#unless this.required}}Option<{{/unless}}{{{this.type}}}{{#unless this.required}}>{{/unless}}{{#unless @last}},{{/unless}}
+   {{/each}}
+}

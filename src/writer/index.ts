@@ -109,10 +109,20 @@ async function writeExporterModules(files: Set<string>, folder: string): Promise
   const exporterModuleContent = Runtime.getExporterModuleTemplate()({
     modules: [...files].map((file) => file.replace(Runtime.getConfig().output.fileExtension, ''))
   });
+  const config = Runtime.getConfig();
+
+  // Merging the contents of exporter module & types file in case their names are same.
+  const typesFileName = Runtime.getConfig().output.typesFileName ?? 'types';
+  const moduleExporterFileName = Runtime.getConfig().language.exporterModuleName;
+  const writingTypesFile =
+    typesFileName !== null ? files.has(typesFileName + config.output.fileExtension) : false;
+  const appendContent = writingTypesFile && typesFileName === moduleExporterFileName;
+
   await writeFile(
     folder,
     Runtime.getConfig().language.exporterModuleName + Runtime.getConfig().output.fileExtension,
-    exporterModuleContent
+    exporterModuleContent,
+    appendContent
   );
 }
 
@@ -129,7 +139,7 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
   // pre compute all the folders and files that will be written
   Runtime.setExpectedOutputFiles(generateExpectedOutputFile());
 
-  // writing types to output directory
+  // #region writing types to output directory
 
   let typesFilesWritten = null;
 
@@ -137,7 +147,11 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
     if (config.output.writerMode.types === 'Files') {
       typesFilesWritten = await writeTypesToFiles(config, generationResult.types);
     } else if (config.output.writerMode.types === 'SingleFile') {
-      typesFilesWritten = await writeTypesToFile(config, generationResult.types);
+      typesFilesWritten = await writeTypesToFile(
+        config,
+        generationResult.types,
+        Runtime.getConfig().output.typesFileName
+      );
     }
   }
 
@@ -148,8 +162,9 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
       typesFilesWritten.files
     );
   }
+  // #endregion
 
-  // writing grouped types to output directory
+  // #region writing grouped types to output directory
   if (config.output.writerMode.groupedTypes === 'FolderWithFiles') {
     for (const groupName in generationResult.groupedTypes) {
       let groupFilesWritten = null;
@@ -188,7 +203,10 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
     }
   }
 
+  // #endregion
+
   writtenFiles.forEach((files, folder) => {
+    console.warn('Files:', [...files.values()].join(', '), 'Folder:', folder);
     void writeExporterModules(files, folder);
   });
 }
